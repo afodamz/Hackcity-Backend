@@ -142,7 +142,7 @@ exports.update = async function (req, res, ext) {
         if (!req.params.id) return res.json(AppResponseDto.buildWithErrorMessages('Category with id not found ' + err));
         const data = req.body;
         const id = req.params.id;
-        const foundData = await Posts.findOne({
+        const foundData = await Categories.findOne({
             where: {
                 id,
                 isDeleted: false,
@@ -171,7 +171,7 @@ exports.update = async function (req, res, ext) {
         // console.log('updatedPost', updatedPost)
         const updatedData = updatedPost.dataValues;
         // const updatedData = {...foundData.dataValues, ...model}
-        return res.json(categoryResponseDto.buildDetails(updatedData))
+        return res.json(CategoryResponseDto.buildDetails(updatedData))
     } catch (error) {
         return res.json(AppResponseDto.buildWithErrorMessages('Error ' + error));
     }
