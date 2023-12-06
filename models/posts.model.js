@@ -8,7 +8,6 @@ module.exports = (sequelize, dbConnection) => {
         },
         title: {type: sequelize.STRING},
         description: {type: sequelize.STRING},
-        status: {type: sequelize.STRING},
         isDeleted: {type: sequelize.BOOLEAN, defaultValue: false},
     });
 };

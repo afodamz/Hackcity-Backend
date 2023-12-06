@@ -3,7 +3,6 @@ const isTokenValid = require('./../utils').isTokenValid;
 const convert_Obj_TO_Array = require('./../utils').convert_Obj_TO_Array;
 const AppResponseDto = require('../dtos/responses/app_response.dto');
 
-
 const checkToken = (req) => isTokenValid(getTokenFromHeader(req));
 
 function getTokenFromHeader(req) {
