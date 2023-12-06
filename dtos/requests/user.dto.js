@@ -35,11 +35,6 @@ exports.createUserRequestDto = (body) => {
     else
         resultBinding.errors.phone = 'Phone is required';
 
-    // if (body.roleId && body.roleId.trim() !== '')
-    //     resultBinding.validatedData.roleId = sanitizeInput(body.roleId);
-    // else
-    //     resultBinding.errors.roleId = 'role id is required';
-
     if (body.password && body.password.trim() !== '')
         resultBinding.validatedData.password = bcrypt.hashSync(body.password.trim());
     else

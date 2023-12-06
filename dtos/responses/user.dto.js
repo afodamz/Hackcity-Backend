@@ -17,7 +17,7 @@ function buildDtos(user) {
 }
 
 function buildDto(user) {
-    const summary = {
+    return {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
@@ -30,9 +30,6 @@ function buildDto(user) {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
     };
-    
-
-    return summary;
 }
 
 function buildDetails(user) {
