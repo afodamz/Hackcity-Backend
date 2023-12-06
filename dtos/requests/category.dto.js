@@ -6,13 +6,13 @@ exports.create = (body) => {
         errors: {},
     };
 
-    if (!body.title || body.title.trim() === '')
-        resultBinding.errors.title = 'title is required';
+    if (!body.name || body.name.trim() === '')
+        resultBinding.errors.name = 'category name is required';
     else
-        resultBinding.validatedData.title = sanitizeInput(body.title);
+        resultBinding.validatedData.name = sanitizeInput(body.name);
 
     if (!body.description || body.description.trim() === '')
-        resultBinding.errors.description = 'description is required';
+        resultBinding.errors.description = 'category description is required';
     else
         resultBinding.validatedData.description = sanitizeInput(body.description);
 

@@ -112,12 +112,12 @@ exports.find = async function (req, res, next) {
 
 exports.create = async function (req, res, next) {
     try {
-        const resultBinding = await PostRequestDto.create(req.body);
+        const resultBinding = await CategoryRequestDto.create(req.body);
         if (!_.isEmpty(resultBinding.errors)) {
             return res.json(AppResponseDto.buildWithErrorMessages(resultBinding.errors));
         }
         const name = resultBinding.validatedData.name;
-        const description = req.body.description;
+        const description = resultBinding.validatedData.description;
 
         const savedPost = await Categories.create({
             name,
