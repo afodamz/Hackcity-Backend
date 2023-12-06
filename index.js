@@ -5,10 +5,10 @@ const path = require('path');
 const logger = require('morgan');
 const cors = require('cors');
 
-const postsRouter = require('./routes/products.routes');
+const postsRouter = require('./routes/post.routes');
 const categoriesRouter = require('./routes/categories.routes');
 const usersRouter = require('./routes/users.routes');
-const passwordRouter = require('./routes/addresses.routes');
+const passwordRouter = require('./routes/password.routes');
 
 const AppResponseDto = require('./dtos/responses/app_response.dto');
 
