@@ -437,7 +437,7 @@ exports.find = async function (req, res, next) {
 
 exports.findSelf = async function (req, res, next) {
     try {
-        console.log('gotten to controller')
+        console.log('gotten to controllers')
         const { id } = req.user;
 
         const foundData = await User.findOne({
