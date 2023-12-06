@@ -9,6 +9,7 @@ module.exports = (sequelize, dbConnection) => {
         username: {type: sequelize.STRING},
         firstName: {type: sequelize.STRING},
         lastName: {type: sequelize.STRING},
+        passwordPin: {type: sequelize.STRING, allowNull: true},
         phone: {type: sequelize.STRING},
         dob: {type: sequelize.DATEONLY},
         userType: {type: sequelize.STRING},
