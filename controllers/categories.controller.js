@@ -116,18 +116,11 @@ exports.create = async function (req, res, next) {
         if (!_.isEmpty(resultBinding.errors)) {
             return res.json(AppResponseDto.buildWithErrorMessages(resultBinding.errors));
         }
-        const title = resultBinding.validatedData.title;
+        const name = resultBinding.validatedData.name;
         const description = req.body.description;
 
-        // let foundCategories = await Categories.findOne({
-        //     where: {
-        //         id: categories,
-        //         isDeleted: false,
-        //     },
-        // });
-        // if (!foundCategories) return res.json(AppResponseDto.buildWithErrorMessages('Preacher not found'));
         const savedPost = await Categories.create({
-            title,
+            name,
             description,
         });
 

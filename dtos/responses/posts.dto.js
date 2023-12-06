@@ -1,43 +1,40 @@
 const PageMetaDto = require('./page_meta.dto');
 const CategoryDto = require("./category.dto");
 
-function buildPagedList(sermon, count, limit, offset, total) {
+function buildPagedList(post, count, limit, offset, total) {
     return {
         success: true,
         count,
         ...PageMetaDto.build(limit, offset, total),
-        result: buildDtos(sermon),
+        result: buildDtos(post),
     }
 }
 
-function buildDtos(sermon) {
-    if (sermon == null)
-        return {sermon: []};
-    return sermon.map(contact => buildDto(contact.dataValues));
+function buildDtos(post) {
+    if (post == null)
+        return {post: []};
+    return post.map(contact => buildDto(contact.dataValues));
 }
 
-function buildDto(sermon) {
-    console.log('sermon?.preacher', sermon)
+function buildDto(post) {
+    console.log('post', post)
     return {
-        id: sermon.id,
-        title: sermon.title,
-        scripture: sermon.scripture,
-        description: sermon?.description,
-        audio: sermon?.audio,
-        status: sermon.status,
-        image: sermon?.image,
-        video: sermon?.video,
-        preacher: PreacherDto.buildDto(sermon?.preacher),
-        date: sermon?.date,
-        createdAt: sermon.createdAt,
-        updatedAt: sermon.updatedAt,
+        id: post.id,
+        title: post.title,
+        description: post?.description,
+        status: post.status,
+        image: post?.image,
+        categories: CategoryDto.buildDto(post?.categories),
+        date: post?.date,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
     };
 }
 
-function buildDetails(sermon) {
+function buildDetails(post) {
     return {
         success: true,
-        result: buildDto(sermon),
+        result: buildDto(post),
     }
 }
 
