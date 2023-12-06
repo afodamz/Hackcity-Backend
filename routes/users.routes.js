@@ -3,7 +3,8 @@ const controller = require('./../controllers/users.controller');
 const AuthMiddleware = require('../middlewares/auth.middleware');
 
 router.get('/self', AuthMiddleware.mustBeAuthenticated, controller.findSelf);
-router.post('/', AuthMiddleware.mustBeAuthenticated, controller.create);
+router.post('', controller.create);
+router.post('/login', controller.login);
 router.put('/update/:id', AuthMiddleware.mustBeAuthenticated, controller.update);
 router.put('/password/:id', AuthMiddleware.mustBeAuthenticated, controller.updatePassword);
 router.get('/all', AuthMiddleware.mustBeAuthenticated, controller.findAll);

@@ -8,8 +8,7 @@ const convert_Obj_TO_Array = (object, key) => {
 
 const generateTokens = async (user) => {
     try {
-        const rolesArray = convert_Obj_TO_Array(await user.getRoles(), 'name');
-        const payload = { sub: user.id, id: user.id, roles: rolesArray, userType: user.userType };
+        const payload = { sub: user.id, id: user.id, userType: user.userType };
         const accessToken = jwt.sign(
             payload,
             process.env.ACCESS_TOKEN_PRIVATE_KEY,

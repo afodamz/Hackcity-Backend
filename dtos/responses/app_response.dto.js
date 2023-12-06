@@ -2,7 +2,6 @@ exports.buildSimpleSuccess = () => {
     return {success: true}
 };
 
-
 exports.buildSuccessWithMessages = (messages) => {
     let response = {success: true};
     if (typeof messages === "string")

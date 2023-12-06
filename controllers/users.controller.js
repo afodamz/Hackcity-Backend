@@ -164,7 +164,6 @@ exports.create = async (req, res) => {
         const username = resultBinding.validatedData.username;
         const phone = resultBinding.validatedData.phone;
 
-
         const user = await User.findOne({
             where: {
                 email: email.trim(),
@@ -179,11 +178,6 @@ exports.create = async (req, res) => {
                             [Op.eq]: phone
                         }
                     },
-                    // {
-                    //     description: {
-                    //         [Op.like]: `%${description}%`
-                    //     }
-                    // }
                 ]
             },
         });
@@ -204,39 +198,9 @@ exports.create = async (req, res) => {
                 .json(AppResponseDto.buildWithErrorMessages("user with phone number already exists"));
 
         const userModel = resultBinding.validatedData;
-        const newUser = await User.create(userModel);
+        await User.create(userModel);
 
-        //Default assign role as USER
-        // const roleId = req.body.roleId.trim();
-        const roleIds = req.body.roleIds;
-        if (roleIds.length === 0) return res.status(400).send(AppResponseDto.buildWithErrorMessages('role id is required'));
-        let roles = await Role.findAll({
-            where: {
-                id: {
-                    // [Sequelize.Op.or]: req.body.roles,
-                    // [Op.eq]: roleId,
-                    [Op.in]: roleIds,
-                },
-                // name: {
-                //     // [Sequelize.Op.or]: req.body.roles,
-                //     [Op.or]: ['USER'],
-                // },
-            },
-        });
-        if (roles.length !== roleIds.length) {
-            const notFoundIds = [];
-            roles.array.forEach(element => {
-                if (roleIds.some(roleId => roleId === element.id)) {
-                    notFoundIds.push(element)
-                }
-            });
-            return res
-                .status(404)
-                .json(AppResponseDto.buildWithErrorMessages(`Role with ids ${[...notFoundIds]} not found`));
-        }
-        await newUser.setRoles(roles);
-
-        res.status(201).json(UserResponseDto.registerDto(user));
+        res.status(201).json(UserResponseDto.registerDto());
     } catch (err) {
         return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
     };
