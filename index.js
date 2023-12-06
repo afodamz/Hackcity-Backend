@@ -36,10 +36,10 @@ app.get("/", (req, res) => {
     })
 });
 
-app.use('/api/v1/posts', postsRouter);
-app.use('/api/v1/categories', categoriesRouter);
-app.use('/api/v1/password', passwordRouter);
-app.use('/api/v1/user', usersRouter);
+// app.use('/api/v1/posts', postsRouter);
+// app.use('/api/v1/categories', categoriesRouter);
+// app.use('/api/v1/password', passwordRouter);
+// app.use('/api/v1/user', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -27,7 +27,6 @@ const init = async () => {
         .catch((err) => {
             console.log("Failed to sync db: " + err.message);
         });
-    insertRoles();
 };
 
 /**
@@ -50,15 +49,17 @@ function normalizePort(val) {
 }
 
 io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
+    console.log('Client connected');
   
     socket.on('message', (msg) => {
       console.log('Received message:', msg);
-      socket.emit('message', 'Message received');
+  
+      // Broadcast message to all connected clients
+      socket.broadcast.emit('message', msg);
     });
   
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+      console.log('Client disconnected');
     });
   });
 
