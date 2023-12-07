@@ -8,6 +8,7 @@ const AppResponseDto = require('./../dtos/responses/app_response.dto')
 
 const Posts = db.posts;
 const Categories = db.categories;
+const Users = db.user;
 
 const Op = Sequelize.Op;
 
@@ -58,16 +59,19 @@ exports.findAll = async function (req, res, next) {
             [Op.and]: subQuery,
         }
 
-        const sermons = await Post.findAndCountAll({
+        const posts = await Posts.findAndCountAll({
             where: query,
             limit: limit,
             offset: offset,
             order: [
                 ["createdAt", "DESC"]
             ],
-            include: [{ model: Categories, as: 'categories', required: false }],
+            include: [
+                { model: Categories, as: 'categories', required: false },
+                { model: Users, as: 'user', required: false },
+            ],
         });
-        const {rows, count} = sermons
+        const {rows, count} = posts
         return res.json(PostResponseDto.buildPagedList(rows, rows.length, limit, offset, count));
     } catch (error) {
         return res.json(AppResponseDto.buildSuccessWithMessages(error.message));
@@ -107,17 +111,13 @@ exports.find = async function (req, res, next) {
             [Op.and]: subQuery,
         }
 
-        const sermons = await Posts.findAndCountAll({
+        const post = await Posts.findOne({
             where: query,
-            limit: limit,
-            offset: offset,
-            order: [
-                ["createdAt", "DESC"]
-            ],
-            include: [{ model: Categories, as: 'categories', required: false }],
+            include: [
+                { model: Users, as: 'user', required: false },
+                { model: Categories, as: 'categories', required: false }],
         });
-        const {rows, count} = sermons
-        return res.json(PostResponseDto.buildPagedList(rows, rows.length, limit, offset, count));
+        return res.json(PostResponseDto.buildDto(post));
     } catch (error) {
         return res.json(AppResponseDto.buildSuccessWithMessages(error.message));
     }
@@ -130,28 +130,50 @@ exports.create = async function (req, res, next) {
             return res.json(AppResponseDto.buildWithErrorMessages(resultBinding.errors));
         }
         const title = resultBinding.validatedData.title;
-        const content = req.body.content;
-        const image = req.body.image;
+        const content = resultBinding.validatedData.content;
+        const image = resultBinding.validatedData.image;
+        const categoryIds = resultBinding.validatedData.categories;
+        const userId = req.user.id;
+        console.log(userId, "userId")
+        let foundCategories = await Categories.findAll({
+            where: {
+                id: {
+                    [Op.in]: categoryIds,
+                },
+                isDeleted: false,
+            },
+        });
+        if (!foundCategories) return res.json(AppResponseDto.buildWithErrorMessages('Preacher not found'));
+        if (foundCategories.length !== categoryIds.length) {
+            const notFoundIds = [];
+            foundCategories.array.forEach(element => {
+                if (categoryIds.some(roleId => roleId === element.id)) {
+                    notFoundIds.push(element)
+                }
+            });
+            return res
+                .status(404)
+                .json(AppResponseDto.buildWithErrorMessages(`Categories with ids ${[...notFoundIds]} not found`));
+        }
 
-        // let foundCategories = await Categories.findOne({
-        //     where: {
-        //         id: categories,
-        //         isDeleted: false,
-        //     },
-        // });
-        // if (!foundCategories) return res.json(AppResponseDto.buildWithErrorMessages('Preacher not found'));
         const savedPost = await Posts.create({
             title,
             content,
+            userId,
             image,
         });
+
+        await savedPost.setCategories(foundCategories);
 
         const foundData = await Posts.findOne({
             where: {
                 id: savedPost.dataValues.id,
                 isDeleted: false,
             },
-            include: [{ model: Categories, as: 'categories', required: false }],
+            include: [
+                { model: Categories, as: 'categories', required: false },
+                { model: Users, as: 'user', required: false },
+            ],
         });
         return res.json(PostResponseDto.buildDetails(foundData.dataValues, false, false));
 

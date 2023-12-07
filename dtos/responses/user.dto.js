@@ -32,6 +32,21 @@ function buildDto(user) {
     };
 }
 
+function buildUserDto(user) {
+    if (!user){
+        return {}
+    }else{
+        return {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            phone: user.phone,
+        };
+    }
+}
+
 function buildDetails(user) {
     return {
         success: true,
@@ -56,5 +71,5 @@ function buildOnlyForIdAndUsername(user) {
 }
 
 module.exports = {
-    registerDto, buildOnlyForIdAndUsername, buildPagedList, buildDetails, buildDtos
+    registerDto, buildOnlyForIdAndUsername, buildUserDto, buildPagedList, buildDetails, buildDtos
 };

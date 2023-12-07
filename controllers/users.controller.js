@@ -10,7 +10,6 @@ const UserRequestDto = require('./../dtos/requests/user.dto');
 const constants = require('./../utils/constants');
 
 const User = db.user;
-const Role = db.roles;
 
 const Op = Sequelize.Op;
 
@@ -100,18 +99,6 @@ exports.singup = async (req, res) => {
                 .json(AppResponseDto.buildWithErrorMessages("user with phone number already exists"));
 
         const userModel = resultBinding.validatedData;
-        const newUser = await User.create(userModel);
-
-        //Default assign role as USER
-        let roles = await Role.findAll({
-            where: {
-                name: {
-                    // [Sequelize.Op.or]: req.body.roles,
-                    [Op.or]: ['ADMIN'],
-                },
-            },
-        });
-        await newUser.setRoles(roles);
 
         res.status(201).json(UserResponseDto.registerDto(user));
     } catch (err) {
@@ -126,7 +113,6 @@ exports.createUser = async (formData) => {
         // const username = formData.username;
         // const firstName = formData.firstName;
         // const lastName = formData.lastName;
-        // const roleId = formData.roleId;
         // const password = formData.password;
 
         const user = await User.findOne({
@@ -136,18 +122,8 @@ exports.createUser = async (formData) => {
         });
 
         const userModel = resultBinding.validatedData;
-        const newUser = await User.create(userModel);
+        await User.create(userModel);
 
-        //Default assign role as USER
-        let roles = await Role.findAll({
-            where: {
-                name: {
-                    // [Sequelize.Op.or]: req.body.roles,
-                    [Op.or]: ['ADMIN'],
-                },
-            },
-        });
-        await newUser.setRoles(roles);
     } catch (err) {
         return 'created successfully';
     };
@@ -231,32 +207,7 @@ exports.update = async (req, res) => {
         if (data.lastName) model.lastName = data.lastName;
         if (data.lastName) model.lastName = data.lastName;
 
-        //Default assign role as USER
-        const roleIds = data.roleIds;
-        if (roleIds) {
-            let roles = await Role.findAll({
-                where: {
-                    id: {
-                        // [Sequelize.Op.or]: req.body.roles,
-                        [Op.in]: roleIds,
-                    },
-                },
-            });
-            if (roles.length !== roleIds.length) {
-                const notFoundIds = [];
-                roles.array.forEach(element => {
-                    if (roleIds.some(roleId => roleId === element.id)) {
-                        notFoundIds.push(element)
-                    }
-                });
-                return res
-                    .status(404)
-                    .json(AppResponseDto.buildWithErrorMessages(`Role with ids ${[...notFoundIds]} not found`));
-            }
-            await newUser.setRoles(roles);
-        }
-
-        await User.update(
+        const updatedUser = await User.update(
             model,
             {
                 where: {
@@ -265,15 +216,10 @@ exports.update = async (req, res) => {
                 returning: true,
             }
         );
-        const updatedSermon = await User.findOne({
-            where: {
-                id,
-                isDeleted: false,
-            },
-            include: [{ model: Role, as: 'roles', required: false }],
-        });
 
-        res.status(201).json(UserResponseDto.buildDetails(updatedSermon));
+        const updatedData = updatedUser.dataValues;
+
+        res.status(201).json(UserResponseDto.buildDetails(updatedData));
     } catch (err) {
         return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
     };
@@ -366,7 +312,6 @@ exports.findAll = async function (req, res, next) {
             where: query,
             limit: limit,
             offset: offset,
-            include: [{ model: Role, as: 'roles', required: false }],
             order: [
                 ["createdAt", "DESC"]
             ],
@@ -388,7 +333,6 @@ exports.find = async function (req, res, next) {
                 isDeleted: false,
             },
         });
-        foundData['roles'] = await foundData.getRoles();
         if (foundData) {
             return res.json(UserResponseDto.buildDetails(foundData))
         } else {
@@ -409,7 +353,6 @@ exports.findSelf = async function (req, res, next) {
                 id,
                 isDeleted: false,
             },
-            include: [{ model: Role, as: 'roles', required: false }],
         });
         console.log('foundData', foundData)
         if (foundData) {

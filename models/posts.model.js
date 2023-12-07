@@ -7,7 +7,8 @@ module.exports = (sequelize, dbConnection) => {
             primaryKey: true
         },
         title: {type: sequelize.STRING},
-        description: {type: sequelize.STRING},
+        image: {type: sequelize.STRING},
+        content: {type: sequelize.STRING},
         isDeleted: {type: sequelize.BOOLEAN, defaultValue: false},
     });
 };

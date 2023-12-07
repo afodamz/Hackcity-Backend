@@ -95,16 +95,10 @@ exports.find = async function (req, res, next) {
             [Op.and]: subQuery,
         }
 
-        const categories = await Categories.findAndCountAll({
+        const category = await Categories.findOne({
             where: query,
-            limit: limit,
-            offset: offset,
-            order: [
-                ["createdAt", "DESC"]
-            ],
         });
-        const {rows, count} = categories
-        return res.json(CategoryResponseDto.buildPagedList(rows, rows.length, limit, offset, count));
+        return res.json(CategoryResponseDto.buildDto(category));
     } catch (error) {
         return res.json(AppResponseDto.buildSuccessWithMessages(error.message));
     }

@@ -9,10 +9,10 @@ function buildPagedList(category, count, limit, offset, total) {
     }
 }
 
-function buildDtos(category) {
-    if (category == null)
-        return {category: []};
-    return category.map(contact => buildDto(contact.dataValues));
+function buildDtos(categories) {
+    if (categories == null)
+        return {categories: []};
+    return categories.map(contact => buildDto(contact.dataValues));
 }
 
 function buildDto(category) {

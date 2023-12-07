@@ -21,5 +21,10 @@ exports.create = (body) => {
     else
         resultBinding.validatedData.image = sanitizeInput(body.image);
 
+    if (!body.categories || body.categories.length === 0)
+        resultBinding.errors.categories = 'categories id in array is required';
+    else
+        resultBinding.validatedData.categories = body.categories;
+
     return resultBinding;
 };

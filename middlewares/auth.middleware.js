@@ -40,51 +40,6 @@ const readToken = function (req, res, next) {
         }
 };
 
-exports.isAdmin = (req, res, next) => {
-
-    if (req.user === null)
-        return res.json(AppResponseDto.buildWithErrorMessages('Access denied, you re not Logged In'));
-    if (req.user.roles.some(role => role === 'ADMIN'))
-        next();
-    else
-        return res.json(AppResponseDto.buildWithErrorMessages('Access denied, you re not an Admin'));
-};
-
-const getFreshUser = (required) => {
-    return (req, res, next) => {
-        if (req.decodedJwt == null || req.decodedJwt.user_id == null) {
-            if (required) // no jwt, and it is required
-                return res.json(AppResponseDto.buildWithErrorMessages('Permission denied'));
-            else // no jwt, but it is not required
-                return next();
-        }
-        User.where({ id: req.decodedJwt.user_id }).fetch({
-            withRelated: [{
-                'roles': queryBuilder => {
-                    queryBuilder.column('roles.id', 'name');
-                }
-            }]
-        })
-            .then((user) => {
-                if (!user) {
-                    // if no user is found, but
-                    // it was a valid JWT but didn't decode
-                    // to a real user in our DB. Either the user was deleted
-                    // since the client got the JWT, or
-                    // it was a JWT from some other source
-                    return res.status(401).send({ error: 'Unauthorized' });
-                } else {
-                    req.rawUser = user;
-                    req.user = user.serialize();
-                    next();
-                }
-            })
-            .catch((err) => {
-                res.json(AppResponseDto.buildWithErrorMessages(err));
-            });
-    };
-};
-
 exports.isAuthenticated = (req, res, next) => {
     if (req.user != null) {
         next();
@@ -95,10 +50,9 @@ exports.isAuthenticated = (req, res, next) => {
 
 exports.generateJwtSync = async function (user) {
 
-    const rolesArray = convert_Obj_TO_Array(await user.getRoles(), 'name');
     return jwt.sign(
         {
-            sub: user.id, id: user.id, roles: rolesArray, userType: user.userType 
+            sub: user.id, id: user.id, userType: user.userType
         },
         process.env.JWT_SECRET || 'JWT_SUPER_SECRET',
         { expiresIn: process.env.EXPIRE_TIME || 360000 }
@@ -114,12 +68,3 @@ exports.userOwnsItOrIsAdmin = (req, res, next) => {
     else
         return res.json(AppResponseDto.buildWithErrorMessages('This resource does not belong to you'));
 };
-
-// TODO: replace by userOwnsItOrIsOnly
-// exports.ownsCommentOrIsAdmin = (req, res, next) => {
-//     if (req.user != null && (req.user.roles.some(role => role.name === 'ROLE_ADMIN') // is admin ?
-//         || req.comment.userId === req.user.id))
-//         next();
-//     else
-//         return res.json(AppResponseDto.buildWithErrorMessages('This comment does not belong to you'));
-// };
