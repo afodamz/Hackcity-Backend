@@ -9,8 +9,13 @@ const AuthResponseDto = require('./../dtos/responses/auth.dto')
 const UserRequestDto = require('./../dtos/requests/user.dto');
 const constants = require('./../utils/constants');
 const otpGenerator = require('otp-generator')
+const PostRequestDto = require("../dtos/requests/posts.dto");
+const PostResponseDto = require("../dtos/responses/posts.dto");
 
 const User = db.user;
+
+const Posts = db.posts;
+const Categories = db.categories;
 
 const Op = Sequelize.Op;
 
@@ -49,86 +54,6 @@ exports.login = async (req, res) => {
     }
 
 }
-
-exports.singup = async (req, res) => {
-    try {
-        const resultBinding = UserRequestDto.createUserRequestDto(req.body);
-        if (!_.isEmpty(resultBinding.errors)) {
-            return res.status(422).json(AppResponseDto.buildWithErrorMessages(resultBinding.errors));
-        }
-
-        const email = resultBinding.validatedData.email;
-        const username = resultBinding.validatedData.username;
-        const phone = resultBinding.validatedData.phone;
-
-        const user = await User.findOne({
-            where: {
-                email: email.trim(),
-                [Op.or]: [
-                    {
-                        username: {
-                            [Op.eq]: username
-                        }
-                    },
-                    {
-                        phone: {
-                            [Op.eq]: phone
-                        }
-                    },
-                    // {
-                    //     description: {
-                    //         [Op.like]: `%${description}%`
-                    //     }
-                    // }
-                ]
-            },
-        });
-
-        if (user && user.username === username)
-            return res
-                .status(404)
-                .json(AppResponseDto.buildWithErrorMessages("user with username already exists"));
-
-        if (user && user.email === email)
-            return res
-                .status(404)
-                .json(AppResponseDto.buildWithErrorMessages("user with email already exists"));
-
-        if (user && user.phone === phone)
-            return res
-                .status(404)
-                .json(AppResponseDto.buildWithErrorMessages("user with phone number already exists"));
-
-        const userModel = resultBinding.validatedData;
-
-        res.status(201).json(UserResponseDto.registerDto(user));
-    } catch (err) {
-        return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
-    };
-};
-
-exports.createUser = async (formData) => {
-    try {
-        const resultBinding = UserRequestDto.createUserRequestDto(formData);
-        const email = formData.email;
-        // const username = formData.username;
-        // const firstName = formData.firstName;
-        // const lastName = formData.lastName;
-        // const password = formData.password;
-
-        const user = await User.findOne({
-            where: {
-                email: email.trim()
-            },
-        });
-
-        const userModel = resultBinding.validatedData;
-        await User.create(userModel);
-
-    } catch (err) {
-        return 'created successfully';
-    };
-};
 
 exports.create = async (req, res) => {
     try {
@@ -481,6 +406,110 @@ exports.delete = async function (req, res, next) {
         } else {
             return res.json(AppResponseDto.buildWithErrorMessages('User not found'));
         }
+    } catch (error) {
+        return res.json(AppResponseDto.buildWithErrorMessages('Error ' + error));
+    }
+};
+
+exports.findAllPosts = async function (req, res, next) {
+    try {
+        const {status, search, title} = req.query;
+        const limit = Number(req.query?.limit || constants.DEFAULT_TAKE);
+        const offset = Number(req.query?.offset || constants.DEFAULT_SKIP);
+        let query = {};
+        console.log('req.query', req.query);
+        const userId = req.user.id;
+        const subQuery = [];
+        if (title) {
+            subQuery.push({
+                title: {
+                    [Op.eq]: title
+                }
+            })
+        }
+        if (search) {
+            subQuery.push({
+                [Op.or]: [
+                    {
+                        title: {
+                            [Op.like]: `%${search}%`
+                        },
+                    },
+                    {
+                        content: {
+                            [Op.like]: search
+                        },
+                    },
+                ]
+            })
+        }
+        subQuery.push({
+            isDeleted: {
+                [Op.eq]: false
+            },
+            // userId,
+        })
+        query = {
+            [Op.and]: subQuery,
+        }
+
+        const posts = await Posts.findAndCountAll({
+            where: query,
+            limit: limit,
+            offset: offset,
+            order: [
+                ["createdAt", "DESC"]
+            ],
+            include: [
+                { model: Categories, as: 'categories', required: false },
+            ],
+        });
+        const {rows, count} = posts
+        return res.json(PostResponseDto.buildPagedList(rows, rows.length, limit, offset, count));
+    } catch (error) {
+        return res.json(AppResponseDto.buildSuccessWithMessages(error.message));
+    }
+};
+
+exports.updateMyPost = async function (req, res, ext) {
+    try {
+        if (!req.params.id) return res.json(AppResponseDto.buildWithErrorMessages('Post with id not found ' + err));
+        const data = req.body;
+        const id = req.params.id;
+        const userId = req.user.id;
+        const foundData = await Posts.findOne({
+            where: {
+                id,
+                userId,
+                isDeleted: false,
+            },
+        });
+        if (!foundData.dataValues) return res.json(AppResponseDto.buildWithErrorMessages('Post not found'));
+        const model = foundData.dataValues;
+        if (data.title) model.title = data.title;
+        if (data.content) model.content = data.content;
+        if (data.image) model.image = data.image;
+
+        await Posts.update(
+            model,
+            {
+                where: {
+                    id: id,
+                },
+                returning: true,
+            }
+        );
+        const updatedPost = await Post.findOne({
+            where: {
+                id,
+                isDeleted: false,
+            },
+            include: [{ model: Categories, as: 'categories', required: false }],
+        });
+        // console.log('updatedPost', updatedPost)
+        const updatedData = updatedPost.dataValues;
+        // const updatedData = {...foundData.dataValues, ...model}
+        return res.json(PostResponseDto.buildDetails(updatedData))
     } catch (error) {
         return res.json(AppResponseDto.buildWithErrorMessages('Error ' + error));
     }
