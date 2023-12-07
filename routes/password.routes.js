@@ -1,8 +1,9 @@
 const router = require('express').Router();
-// const controller = require('./../controllers/password.controller');
-// const AuthMiddleware = require('../middlewares/auth.middleware');
+const controller = require('./../controllers/users.controller');
+const AuthMiddleware = require('../middlewares/auth.middleware');
 
-// router.get('/self', AuthMiddleware.mustBeAuthenticated, controller.findSelf);
-// router.put('/create', AuthMiddleware.mustBeAuthenticated, controller.updatePassword);
+router.put('/:id', AuthMiddleware.mustBeAuthenticated, controller.updatePassword);
+router.post('/request-reset', controller.requestResetPassword);
+router.post('/reset-password', controller.resetPassword);
 
 module.exports = router;

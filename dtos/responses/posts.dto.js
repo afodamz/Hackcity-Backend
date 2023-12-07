@@ -18,7 +18,6 @@ function buildDtos(post) {
 }
 
 function buildDto(post) {
-    console.log('post', post)
     return {
         id: post.id,
         title: post.title,

@@ -1,13 +1,12 @@
 const sanitizeInput = require('./../../utils/sanitize').sanitizeInput;
 const bcrypt = require('bcryptjs')
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 exports.createUserRequestDto = (body) => {
     const resultBinding = {
         validatedData: {},
         errors: {},
     };
-
-    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
     if (!body.firstName || body.firstName.trim() === '')
         resultBinding.errors.firstName = 'firstName is required';
@@ -63,6 +62,47 @@ exports.updatePasswordRequestDto = (body) => {
 
     if (!body.confirmPassword || body.confirmPassword.trim() === '' || body.confirmPassword !== body.password)
         resultBinding.errors.confirmPassword = 'Confirmation password must not be empty and matching password';
+
+    return resultBinding;
+};
+
+exports.resetPasswordDto = (body) => {
+    const resultBinding = {
+        validatedData: {},
+        errors: {},
+    };
+
+    if (body.email || body.email.trim() !== '' || emailRegex.test(String(body.email).toLowerCase()))
+        resultBinding.validatedData.email = sanitizeInput(body.email.toLowerCase());
+    else
+        resultBinding.errors.email = 'Email is required';
+
+    if (body.otp && body.otp.trim() !== '')
+        resultBinding.validatedData.otp = sanitizeInput(body.otp);
+    else
+        resultBinding.errors.otp = 'otp must not be empty';
+
+    if (body.password && body.password.trim() !== '')
+        resultBinding.validatedData.password = bcrypt.hashSync(body.password.trim());
+    else
+        resultBinding.errors.password = 'Password must not be empty';
+
+    if (!body.confirmPassword || body.confirmPassword.trim() === '' || body.confirmPassword !== body.password)
+        resultBinding.errors.confirmPassword = 'Confirmation password must not be empty and matching password';
+
+    return resultBinding;
+};
+
+exports.resetPasswordRequestDto = (body) => {
+    const resultBinding = {
+        validatedData: {},
+        errors: {},
+    };
+
+    if (body.email || body.email.trim() !== '' || emailRegex.test(String(body.email).toLowerCase()))
+        resultBinding.validatedData.email = sanitizeInput(body.email.toLowerCase());
+    else
+        resultBinding.errors.email = 'Email is required';
 
     return resultBinding;
 };

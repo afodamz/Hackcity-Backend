@@ -8,6 +8,7 @@ const UserResponseDto = require('./../dtos/responses/user.dto')
 const AuthResponseDto = require('./../dtos/responses/auth.dto')
 const UserRequestDto = require('./../dtos/requests/user.dto');
 const constants = require('./../utils/constants');
+const otpGenerator = require('otp-generator')
 
 const User = db.user;
 
@@ -263,6 +264,99 @@ exports.updatePassword = async (req, res) => {
         );
 
         res.status(201).json(AppResponseDto.buildSuccessWithMessages("password updated successfully"));
+    } catch (err) {
+        return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
+    };
+};
+
+exports.requestResetPassword = async (req, res) => {
+    try {
+        const formData = req.body;
+        const resultBinding = UserRequestDto.resetPasswordRequestDto(formData);
+        const email = resultBinding.validatedData.email;
+
+        const user = await User.findOne({
+            where: {
+                email,
+                isDeleted: false,
+            },
+        });
+
+        if (!user)
+            return res
+                .status(404)
+                .json(AppResponseDto.buildWithErrorMessages("user with email does not exist"));
+
+        const model = user.dataValues;
+
+        model.passwordPin = otpGenerator.generate(6, {
+            digits: true,
+            upperCaseAlphabets: true,
+            lowerCaseAlphabets: false,
+            specialChars: false,
+        });
+
+        await User.update(
+            model,
+            {
+                where: {
+                    id: model.id,
+                },
+                returning: true,
+            }
+        );
+
+        res.status(201).json({
+            message: "password updated successfully",
+            pin: model.passwordPin
+        });
+    } catch (err) {
+        return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const formData = req.body;
+        const resultBinding = UserRequestDto.resetPasswordDto(formData);
+        const email = resultBinding.validatedData.email;
+        const otp = resultBinding.validatedData.otp;
+        const password = resultBinding.validatedData.password;
+        console.log({...resultBinding})
+        const user = await User.findOne({
+            where: {
+                email,
+                passwordPin: otp,
+                isDeleted: false,
+            },
+        });
+        if (!user)
+            return res
+                .status(404)
+                .json(AppResponseDto.buildWithErrorMessages("user with email does not exist"));
+
+        const model = user.dataValues;
+        let matched = bcrypt.compare(model.password, model.password);
+
+        if (!matched)
+            return res
+                .status(404)
+                .json(AppResponseDto.buildWithErrorMessages("old password is incorrect"));
+
+        model.password = password;
+        model.passwordPin = null;
+
+        await User.update(
+            model,
+            {
+                where: {
+                    id: model.id,
+                },
+                returning: true,
+            }
+        );
+
+        res.status(201).json(AppResponseDto.buildSuccessWithMessages("password reset successfully"));
     } catch (err) {
         return res.status(400).send(AppResponseDto.buildWithErrorMessages(err));
     };
